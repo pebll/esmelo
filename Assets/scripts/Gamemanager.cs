@@ -9,6 +9,7 @@ public class Gamemanager : MonoBehaviour
     [HideInInspector]
     public List<CharacterBhv> PlayOrder;
     GameObject UICanvas;
+    public GameObject nextUnitBar;
 
     public GameObject[,] tileList;
     //public GameObject player;
@@ -137,7 +138,7 @@ public class Gamemanager : MonoBehaviour
     public void nextUnit()
     {
         Debug.Log("next unit: " + (playOrderIndex + 1));
-
+        UpdatePlayOrder();
 
         DeselectAllCharacters();
         playOrderIndex += 1;
@@ -152,7 +153,7 @@ public class Gamemanager : MonoBehaviour
         RefreshCharacter(playingCharacter);
         //focus on unit
         Camera.main.GetComponent<CameraBhv>().Focus(playingCharacter.gameObject.transform.position, unitSwapDelay);
-        
+        nextUnitBar.GetComponent<nextUnitBarBhv>().UpdateBar();
         
         Invoke("nextUnitReal", unitSwapDelay * 2/4);
     }
@@ -193,15 +194,36 @@ public class Gamemanager : MonoBehaviour
         Debug.Log("Turn: " + (turn + 1));
         turn += 1;
         playOrderIndex = -1;
+
+        
+        nextUnit();
+
+    }
+    
+    public void UpdatePlayOrder()
+    {
+        CharacterBhv activeCharacter = null;
+        if (playOrderIndex != -1)
+            activeCharacter = PlayOrder[playOrderIndex];
         PlayOrder.Clear();
-        GameObject[] cObj = GameObject.FindGameObjectsWithTag("character");
+        /*GameObject[] cObj = GameObject.FindGameObjectsWithTag("character");
         foreach (GameObject c in cObj)
         {
             PlayOrder.Add(c.GetComponent<CharacterBhv>());
-        }
-        nextUnit();
+        }*/
+        foreach (GameObject cObj in characters)
+            PlayOrder.Add(cObj.GetComponent<CharacterBhv>());
+        PlayOrder = PlayOrder.OrderByDescending(w => w.initiative).ToList();
+
+        if (playOrderIndex != -1)
+            for (int i = 0; i < PlayOrder.Count; i++)
+                if (PlayOrder[i] == activeCharacter)
+                    playOrderIndex = i;
+
+
+        if(playOrderIndex != -1)
+            nextUnitBar.GetComponent<nextUnitBarBhv>().UpdateBar();
     }
-    
     public void CheckBattleWinner() // "ally" / "enemy"
     {
         bool allyAlive = false;

@@ -338,6 +338,7 @@ public class CharacterBhv : MonoBehaviour
         //animation
         LeanTween.alpha(gameObject, 0, 1);
         manager.characters.Remove(gameObject);
+        manager.UpdatePlayOrder();
         Invoke("Kill", 1);
 
         manager.CheckBattleWinner();
