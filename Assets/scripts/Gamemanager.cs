@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Linq;
 
+
 public class Gamemanager : MonoBehaviour
 {
     [HideInInspector]
@@ -11,6 +12,7 @@ public class Gamemanager : MonoBehaviour
     GameObject UICanvas;
     public GameObject nextUnitBar;
 
+    public GameObject characterPrefab;
     public GameObject[,] tileList;
     //public GameObject player;
     public List<GameObject> characters;
@@ -25,13 +27,19 @@ public class Gamemanager : MonoBehaviour
     GameObject selectedCharacter = null; 
     CharacterBhv playingCharacter = null;
 
+    // new generation 
+    public Unit[] allyUnitPool;
+    public Unit[] enemyUnitPool;
+    public int baseAllySP = 50;
+    public int baseEnemySP = 40;
+
     public class AttackTile
     {
         public Vector2 fromPos, targetPos; 
     }
     private void Awake()
     {
-        
+        //GenerateUnits();
         GameObject[] cObj = GameObject.FindGameObjectsWithTag("character");
         foreach (GameObject c in cObj)
         {
@@ -117,6 +125,52 @@ public class Gamemanager : MonoBehaviour
         }   
     }
 
+    public void SpawnUnit(Unit unit, Vector3 pos, bool isEnemy = false)
+    {
+        GameObject newC = Instantiate(characterPrefab, pos, Quaternion.identity);
+        newC.GetComponent<CharacterBhv>().isEnemy = isEnemy;
+        newC.GetComponent<CharacterBhv>().Inherit(unit.name);
+
+    }
+    void GenerateUnits()
+    {
+        float allySP = baseAllySP, enemySP = baseEnemySP;
+        for(int i = 0; i < 10; i++) // for ally
+        {
+            List<Unit> pool = GetAvailableUnits(allyUnitPool, allySP);
+            if (pool.Count == 0)
+                break;
+            Unit newUnit = pool[Random.Range(0, pool.Count - 1)];
+            Vector3 pos = new Vector3(Random.Range(1, mapSizeX - 1), 1, 1);
+            SpawnUnit(newUnit, pos);
+            allySP -= newUnit.CalculateSP();
+        }
+        for (int i = 0; i < 10; i++) // for enemy
+        {
+            List<Unit> pool = GetAvailableUnits(enemyUnitPool, enemySP);
+            if (pool.Count == 0)
+                break;
+            Unit newUnit = pool[Random.Range(0, pool.Count - 1)];
+            Vector3 pos = new Vector3(Random.Range(1, mapSizeX - 1), mapSizeY-2, 1);
+            SpawnUnit(newUnit, pos, true);
+            enemySP -= newUnit.CalculateSP();
+        }
+    }
+
+    List<Unit> GetAvailableUnits(Unit[] pool, float SP)
+    {
+        List<Unit> units = new List<Unit>();
+        foreach(Unit u in pool)
+        {
+            
+            if (u.CalculateSP() < SP)
+            {
+                units.Add(u);
+            }  
+        }
+        Debug.Log("count"+units.Count);
+        return units;
+    }
     public void EnemyTurn()
     {
         isEnemyTurn = true;

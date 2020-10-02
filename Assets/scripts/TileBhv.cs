@@ -23,6 +23,7 @@ public class TileBhv : MonoBehaviour
     [HideInInspector]
     public string status = "none";
     public Vector3 attackOrigin;
+    bool characterBehind = false;
     // tilemaps
     [HideInInspector]
     public Tilemap baseTilemap, obstacleTilemap;
@@ -70,6 +71,24 @@ public class TileBhv : MonoBehaviour
     private void Update()
     {
         UpdateStatus();
+        // if obstacle alpha control
+
+        if (obstacleName != "")
+        {
+            if (manager.getCharacter(transform.position + Vector3.up) && !characterBehind)
+            {
+                LeanTween.alpha(gameObject, .5f, 1).setEaseOutQuint();
+                characterBehind = true;
+            }
+            else if (!manager.getCharacter(transform.position + Vector3.up) && characterBehind)
+            {
+                LeanTween.alpha(gameObject, 1, 1f).setEaseOutQuint();
+                characterBehind = false;
+            }
+        }
+            
+        
+
         //check characters
         foreach(GameObject character in manager.characters)
         {

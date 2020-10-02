@@ -28,8 +28,9 @@ public class CameraBhv : MonoBehaviour
         }
         if (Input.GetMouseButton(2)) // held down
         {
-            transform.position = cameraStartPos + (mouseStartPos - mousePos());
+            transform.position = cameraStartPos + ((mouseStartPos - mousePos())*(Camera.main.orthographicSize /3));
         }
+        // max & min
         transform.position = new Vector3(Mathf.Max(transform.position.x, 0), Mathf.Max(transform.position.y, 0), transform.position.z);
         transform.position = new Vector3(Mathf.Min(transform.position.x, manager.mapSizeX), Mathf.Min(transform.position.y, manager.mapSizeY), transform.position.z);
         //zoom

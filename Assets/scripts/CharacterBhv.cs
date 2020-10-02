@@ -38,14 +38,18 @@ public class CharacterBhv : MonoBehaviour
     public int turnState = -1; // -2 = turn finished -1: turn available 0: initialisation 1: move 2: attack 3: finish 
     GameObject afterMoveAttackTarget = null;
     // base stats
-    public int initiative = 5; // /10
-    public int baseMP = 3;
+    [HideInInspector]
+    public float SP;
+    [HideInInspector]
+    public int baseHealth, initiative, baseMP, baseArmor, baseDamage, attackRange;
+    
     public bool isEnemy = false;
-    public int baseHealth = 3;
-    public int baseArmor = 0;
-    public int baseDamage = 1;
-    public int attackCost = 1;
-    public int attackRange = 1; // (melee)
+    
+    int attackCost = 1;
+    
+
+    public string unitName = "default";
+    Unit unit;
 
     // game stats
     [HideInInspector]
@@ -53,25 +57,64 @@ public class CharacterBhv : MonoBehaviour
 
     private void Awake()
     {
-        if (isEnemy)
-        {
-            characterCanvas.SetActive(false);
-        }
-            
-        else
-            InitialiseBar();
+        manager = FindObjectOfType<Gamemanager>();
+        pathfinder = FindObjectOfType<Pathfinding>();
+        /*unit = Resources.Load<Unit>("Units/" + unitName);
+        // base values ( derived from scriptable obj)
+        initiative = unit.initiative;
+        baseMP = unit.MP;
+        baseHealth = unit.health;
+        baseArmor = unit.armor;
+        baseDamage = unit.damage;
+        attackRange = unit.range;
+        renderer.sprite = unit.sprite;
+
+        // game values
         MP = baseMP;
         AP = 1;
         health = baseHealth;
         armor = baseArmor;
         damage = baseDamage;
-        manager = GameObject.FindObjectOfType<Gamemanager>();
-        pathfinder = GameObject.FindObjectOfType<Pathfinding>();
-        //debug
-        //if (isEnemy)
-            //renderer.color = Color.red;
+        // other stuff
+        if (isEnemy)
+            characterCanvas.SetActive(false);
+        else
+            InitialiseBar();
+
+        SP = unit.CalculateSP();
+        Debug.Log("SP of " + unitName + " : " + SP);*/
+        Inherit(unitName);
+
     }
 
+    public void Inherit(string name)
+    {
+        Debug.Log("inheriting from " + name);
+        unit = Resources.Load<Unit>("Units/" + name);
+        // base values ( derived from scriptable obj)
+        initiative = unit.initiative;
+        baseMP = unit.MP;
+        baseHealth = unit.health;
+        baseArmor = unit.armor;
+        baseDamage = unit.damage;
+        attackRange = unit.range;
+        renderer.sprite = unit.sprite;
+
+        // game values
+        MP = baseMP;
+        AP = 1;
+        health = baseHealth;
+        armor = baseArmor;
+        damage = baseDamage;
+        // other stuff
+        if (isEnemy)
+            characterCanvas.SetActive(false);
+        else
+            InitialiseBar();
+
+        SP = unit.CalculateSP();
+        Debug.Log("SP of " + unitName + " : " + SP);
+    }
 
     void Update()
     {
@@ -319,6 +362,7 @@ public class CharacterBhv : MonoBehaviour
 
     }
     
+   
     public void PassTurn()
     {       
         MP = 0;
@@ -360,7 +404,7 @@ public class CharacterBhv : MonoBehaviour
 
     void InitialiseBar()
     { 
-        CharacterBar.transform.GetChild(1).GetComponent<Text>().text = name;
+        CharacterBar.transform.GetChild(1).GetComponent<Text>().text = unitName;
         CharacterBar.transform.GetChild(2).GetComponent<Image>().sprite = renderer.sprite;
 
     }

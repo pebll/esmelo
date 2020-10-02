@@ -48,7 +48,8 @@ public class GeneratorBhv : MonoBehaviour
         
         if (pos.x == 0 || pos.x == sizeX -1 || pos.y == 0 || pos.y == sizeY -1)
             tileName = "";
-        
+        if (pos.x == 1 || pos.x == sizeX - 2)
+            obstacleName = "";
         if(tileName != "")
         {   
             //generate tile
