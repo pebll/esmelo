@@ -19,31 +19,35 @@ public class CameraBhv : MonoBehaviour
     }
     private void Update()
     {
-        //transform.position = new Vector3(transform.position.x, transform.position.y, -10);
-        // movement
-        if (Input.GetMouseButtonDown(2)) // pressed
+        if (!Gamemanager.isPaused)
         {
-            mouseStartPos = mousePos();
-            cameraStartPos = transform.position;
+            //transform.position = new Vector3(transform.position.x, transform.position.y, -10);
+            // movement
+            if (Input.GetMouseButtonDown(2)) // pressed
+            {
+                mouseStartPos = mousePos();
+                cameraStartPos = transform.position;
+            }
+            if (Input.GetMouseButton(2)) // held down
+            {
+                transform.position = cameraStartPos + ((mouseStartPos - mousePos()) * (Camera.main.orthographicSize / 3));
+            }
+            // max & min
+            transform.position = new Vector3(Mathf.Max(transform.position.x, 0), Mathf.Max(transform.position.y, 0), transform.position.z);
+            transform.position = new Vector3(Mathf.Min(transform.position.x, manager.mapSizeX), Mathf.Min(transform.position.y, manager.mapSizeY), transform.position.z);
+            //zoom
+            float zoomAmount = 3;
+            if (Input.GetAxis("Mouse ScrollWheel") > 0 && inZoomLimit(true)) // forward
+            {
+                Camera.main.orthographicSize -= zoomAmount / 10;
+
+            }
+            if (Input.GetAxis("Mouse ScrollWheel") < 0 && inZoomLimit(false)) // backwards
+            {
+                Camera.main.orthographicSize += zoomAmount / 10;
+            }
         }
-        if (Input.GetMouseButton(2)) // held down
-        {
-            transform.position = cameraStartPos + ((mouseStartPos - mousePos())*(Camera.main.orthographicSize /3));
-        }
-        // max & min
-        transform.position = new Vector3(Mathf.Max(transform.position.x, 0), Mathf.Max(transform.position.y, 0), transform.position.z);
-        transform.position = new Vector3(Mathf.Min(transform.position.x, manager.mapSizeX), Mathf.Min(transform.position.y, manager.mapSizeY), transform.position.z);
-        //zoom
-        float zoomAmount = 3;
-        if (Input.GetAxis("Mouse ScrollWheel") > 0 && inZoomLimit(true)) // forward
-        {
-            Camera.main.orthographicSize-=zoomAmount / 10;
-            
-        }
-        if (Input.GetAxis("Mouse ScrollWheel") < 0&& inZoomLimit(false)) // backwards
-        {
-            Camera.main.orthographicSize+=zoomAmount / 10;
-        }
+        
     }
 
     bool inZoomLimit(bool zooming)

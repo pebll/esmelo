@@ -11,7 +11,8 @@ public class Gamemanager : MonoBehaviour
     public List<CharacterBhv> PlayOrder;
     GameObject UICanvas;
     public GameObject nextUnitBar;
-
+    [HideInInspector]
+    public static bool isPaused = false;
     public GameObject characterPrefab;
     public GameObject[,] tileList;
     //public GameObject player;
@@ -62,11 +63,16 @@ public class Gamemanager : MonoBehaviour
 
     private void Start()
     {
+        SetPause(false, false);
+        UICanvas = GameObject.FindWithTag("UICanvas");
         NextTurn();
     }
     private void Update()
     {
-        UICanvas = GameObject.FindWithTag("UICanvas");
+        
+        // paused
+        if (Input.GetKeyDown(KeyCode.Escape))
+            SetPause(!isPaused, true);
         // tiles show 
         if (selectedCharacter != null && selectedCharacter.GetComponent<CharacterBhv>().notMoving)
             GetSurroundingTiles(selectedCharacter);
@@ -87,42 +93,43 @@ public class Gamemanager : MonoBehaviour
             {
                 nextUnit();               
             }
-                
-        
 
-        // check for clicks
-        if (Input.GetMouseButtonDown(0) && !isEnemyTurn)// clicked with select button
+        if (!isPaused)
         {
-            //DeselectAllCharacters();
-            
-            // check for tile
-            GameObject selectedTile = getTileAtMouse();
-          
-            //check for characters
-            //SelectCharacter(getCharacterAtMouse());
-        }
-
-        if (Input.GetMouseButtonDown(1) && !isEnemyTurn) // clicked with action button
-        {
-            GameObject selectedTile = getTileAtMouse();
-            GameObject targetCharacter = getCharacterAtMouse();
-            if(selectedCharacter != null)
+            // check for clicks
+            if (Input.GetMouseButtonDown(0) && !isEnemyTurn)// clicked with select button
             {
-                if (selectedTile != null)
-                    // MOVE
-                    if (selectedTile.GetComponent<TileBhv>().status == "move")
-                    {
-                        
-                        selectedCharacter.GetComponent<CharacterBhv>().MoveTowards(selectedTile.transform.position);
-                    }
-                    // ATTACK
-                    else if (selectedTile.GetComponent<TileBhv>().status == "attack")
-                    {
-                        selectedCharacter.GetComponent<CharacterBhv>().Attack(targetCharacter);
-                        
-                    }
-            }          
-        }   
+                //DeselectAllCharacters();
+
+                // check for tile
+                GameObject selectedTile = getTileAtMouse();
+
+                //check for characters
+                //SelectCharacter(getCharacterAtMouse());
+            }
+
+            if (Input.GetMouseButtonDown(1) && !isEnemyTurn) // clicked with action button
+            {
+                GameObject selectedTile = getTileAtMouse();
+                GameObject targetCharacter = getCharacterAtMouse();
+                if (selectedCharacter != null)
+                {
+                    if (selectedTile != null)
+                        // MOVE
+                        if (selectedTile.GetComponent<TileBhv>().status == "move")
+                        {
+
+                            selectedCharacter.GetComponent<CharacterBhv>().MoveTowards(selectedTile.transform.position);
+                        }
+                        // ATTACK
+                        else if (selectedTile.GetComponent<TileBhv>().status == "attack")
+                        {
+                            selectedCharacter.GetComponent<CharacterBhv>().Attack(targetCharacter);
+
+                        }
+                }
+            }
+        }
     }
 
     public void SpawnUnit(Unit unit, Vector3 pos, bool isEnemy = false)
@@ -291,13 +298,13 @@ public class Gamemanager : MonoBehaviour
         }
         if (allyAlive == false)
         {
-            //pause
-            UICanvas.transform.GetChild(0).gameObject.SetActive(true);
+            SetPause(true, false);
+            UICanvas.transform.GetChild(1).gameObject.SetActive(true);
         }
         if (enemyAlive == false)
         {
-            //pause
-            UICanvas.transform.GetChild(1).gameObject.SetActive(true);
+            SetPause(true, false);
+            UICanvas.transform.GetChild(2).gameObject.SetActive(true);
         }
             
         
@@ -331,6 +338,27 @@ public class Gamemanager : MonoBehaviour
         }
         //Debug.Log("can attack " + attackTiles.Count);
         return attackTiles;
+    }
+
+    public void Resume()
+    {
+        SetPause(false, true);
+    }
+    public void SetPause(bool pause, bool UI)
+    {
+        isPaused = pause;
+        if (!pause)
+        {
+            if(UI)
+                UICanvas.transform.GetChild(3).gameObject.SetActive(false);
+            Time.timeScale = 1f;
+        }
+        else if (pause)
+            Time.timeScale = 0f;
+            
+        if (pause && UI)
+            UICanvas.transform.GetChild(3).gameObject.SetActive(true);
+           
     }
     public bool CanAttack(Vector3 attackerPos, Vector3 target, GameObject attackerObj)
     {
