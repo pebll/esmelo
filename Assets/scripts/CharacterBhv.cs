@@ -89,7 +89,8 @@ public class CharacterBhv : MonoBehaviour
 
     public void Inherit(string name)
     {
-        Debug.Log("inheriting from " + name);
+        unitName = name;
+        //Debug.Log("inheriting from " + name);
         unit = Resources.Load<Unit>("Units/" + name);
         // base values ( derived from scriptable obj)
         initiative = unit.initiative;
@@ -250,6 +251,9 @@ public class CharacterBhv : MonoBehaviour
                     moveGoal = transform.position;
                 if (moveGoal == new Vector3(-100, -100))
                     moveGoal = path[path.Length - 1];
+
+                Debug.Log("drztgydhujikol" + path.Length);
+
                 // next state
                 MoveTowards(moveGoal);
 

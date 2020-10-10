@@ -40,8 +40,10 @@ public class Gamemanager : MonoBehaviour
     }
     private void Awake()
     {
+        SetPause(true, false);
         //GenerateUnits();
         GameObject[] cObj = GameObject.FindGameObjectsWithTag("character");
+        
         foreach (GameObject c in cObj)
         {
             characters.Add(c);
@@ -58,18 +60,27 @@ public class Gamemanager : MonoBehaviour
         //
         
         PlayOrder = PlayOrder.OrderByDescending(w => w.initiative).ToList();
-        
+        SetPause(false, false);
     }
 
     private void Start()
     {
+        GenerateUnits();
         SetPause(false, false);
         UICanvas = GameObject.FindWithTag("UICanvas");
         NextTurn();
     }
     private void Update()
     {
-        
+
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            GenerateUnits();
+            //for(int i = 0; i < 2;i++)
+            //SpawnUnit("swordsman", new Vector3(6, 7), false);
+            
+        }
+            
         // paused
         if (Input.GetKeyDown(KeyCode.Escape))
             SetPause(!isPaused, true);
@@ -132,24 +143,52 @@ public class Gamemanager : MonoBehaviour
         }
     }
 
+    public void SpawnUnit(Unit unit, List<Vector3> posList, bool isEnemy = false)
+    {
+        Vector3 pos = posList[Random.Range(0, posList.Count)];
+        // while cannot spawn there
+        int i = 0;
+        while (getTile(pos).GetComponent<TileBhv>().obstacleName != ""|| getCharacter(pos))
+        {
+            i++;
+            pos = posList[Random.Range(0, posList.Count)];
+            if (i > 100)
+                return;
+        }
+        SpawnUnit(unit, pos, isEnemy);
+            
+    }
     public void SpawnUnit(Unit unit, Vector3 pos, bool isEnemy = false)
     {
         GameObject newC = Instantiate(characterPrefab, pos, Quaternion.identity);
         newC.GetComponent<CharacterBhv>().isEnemy = isEnemy;
         newC.GetComponent<CharacterBhv>().Inherit(unit.name);
+        characters.Add(newC);
+        UpdatePlayOrder();
+        
+    }
 
+    public void SpawnUnit(string unit, Vector3 pos, bool isEnemy = false)
+    {
+        SpawnUnit(Resources.Load<Unit>("Units/" + unit),pos,isEnemy);
     }
     void GenerateUnits()
     {
         float allySP = baseAllySP, enemySP = baseEnemySP;
+      
         for(int i = 0; i < 10; i++) // for ally
         {
             List<Unit> pool = GetAvailableUnits(allyUnitPool, allySP);
             if (pool.Count == 0)
                 break;
-            Unit newUnit = pool[Random.Range(0, pool.Count - 1)];
-            Vector3 pos = new Vector3(Random.Range(1, mapSizeX - 1), 1, 1);
-            SpawnUnit(newUnit, pos);
+            Unit newUnit = pool[Random.Range(0, pool.Count)];
+            //Vector3 pos = new Vector3(Random.Range(1, mapSizeX - 1), 1);
+            List<Vector3> posList = new List<Vector3>();
+            for (int x = 1; x < mapSizeX - 1; x++)
+                for (int y = 1; y < 3; y++)
+                    posList.Add(new Vector3(x, y));
+            SpawnUnit(newUnit, posList);
+           
             allySP -= newUnit.CalculateSP();
         }
         for (int i = 0; i < 10; i++) // for enemy
@@ -157,9 +196,14 @@ public class Gamemanager : MonoBehaviour
             List<Unit> pool = GetAvailableUnits(enemyUnitPool, enemySP);
             if (pool.Count == 0)
                 break;
-            Unit newUnit = pool[Random.Range(0, pool.Count - 1)];
-            Vector3 pos = new Vector3(Random.Range(1, mapSizeX - 1), mapSizeY-2, 1);
-            SpawnUnit(newUnit, pos, true);
+            Unit newUnit = pool[Random.Range(0, pool.Count)];
+            //Vector3 pos = new Vector3(Random.Range(1, mapSizeX - 1), mapSizeY-2);
+            List<Vector3> posList = new List<Vector3>();
+            for (int x = 1; x < mapSizeX - 1; x++)
+                for (int y = mapSizeY -3; y < mapSizeY - 1; y++)
+                    posList.Add(new Vector3(x, y));
+            SpawnUnit(newUnit, posList, true);
+            
             enemySP -= newUnit.CalculateSP();
         }
     }
@@ -264,14 +308,21 @@ public class Gamemanager : MonoBehaviour
     public void UpdatePlayOrder()
     {
         CharacterBhv activeCharacter = null;
-        if (playOrderIndex != -1)
-            activeCharacter = PlayOrder[playOrderIndex];
-        PlayOrder.Clear();
-        /*GameObject[] cObj = GameObject.FindGameObjectsWithTag("character");
-        foreach (GameObject c in cObj)
+        // if first time
+        if (PlayOrder.Count == 0)
         {
-            PlayOrder.Add(c.GetComponent<CharacterBhv>());
-        }*/
+             activeCharacter = characters[0].GetComponent<CharacterBhv>();
+        }
+        // else if already active character 
+        else
+        {
+            if (playOrderIndex != -1)
+                activeCharacter = PlayOrder[playOrderIndex];
+            PlayOrder.Clear();
+        }
+       
+        
+
         foreach (GameObject cObj in characters)
             PlayOrder.Add(cObj.GetComponent<CharacterBhv>());
         PlayOrder = PlayOrder.OrderByDescending(w => w.initiative).ToList();
@@ -282,8 +333,10 @@ public class Gamemanager : MonoBehaviour
                     playOrderIndex = i;
 
 
-        if(playOrderIndex != -1)
+        if (playOrderIndex != -1)
             nextUnitBar.GetComponent<nextUnitBarBhv>().UpdateBar();
+        
+        
     }
     public void CheckBattleWinner() // "ally" / "enemy"
     {
